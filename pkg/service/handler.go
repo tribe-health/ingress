@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 
@@ -112,8 +113,12 @@ func (h *Handler) buildPipeline(ctx context.Context, info *livekit.IngressInfo, 
 }
 
 func (h *Handler) sendUpdate(ctx context.Context, info *livekit.IngressInfo) {
-	if info.State.Status == livekit.IngressState_ENDPOINT_ERROR {
-		logger.Errorw("ingress failed", errors.New(info.State.Error))
+	switch info.State.Status {
+	case livekit.IngressState_ENDPOINT_ERROR:
+		logger.Infow("ingress failed", errors.New(info.State.Error))
+		fallthrough
+	case livekit.IngressState_ENDPOINT_INACTIVE:
+		info.State.EndedAt = time.Now().UnixNano()
 	}
 
 	if err := h.rpcServer.SendUpdate(ctx, info.IngressId, info.State); err != nil {

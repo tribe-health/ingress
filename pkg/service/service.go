@@ -172,6 +172,7 @@ func (s *Service) isIdle() bool {
 func (s *Service) sendUpdate(ctx context.Context, info *livekit.IngressInfo, err error) {
 	if err != nil {
 		info.State.Status = livekit.IngressState_ENDPOINT_ERROR
+		info.State.EndedAt = time.Now().UnixNano()
 		info.State.Error = err.Error()
 		logger.Errorw("ingress failed", errors.New(info.State.Error))
 	}
